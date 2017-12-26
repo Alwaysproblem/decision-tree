@@ -4,6 +4,7 @@
 # test environment:
 # Python 3.6.3 (v3.6.3:2c5fed86e0, Oct  3 2017, 00:32:08) 
 # [GCC 4.2.1 (Apple Inc. build 5666) (dot 3)] on darwin
+
 from queue import Queue
 
 class Tree:
@@ -43,9 +44,9 @@ class Tree:
         elif self.is_full(Parent) is True:
             return 'full'
         else:
-            for i in range(len(Parent.leafs)):
-                if Parent.leafs[i].value is None:
-                    Parent._leaf_join(Subtree, i)
+            for index in range(len(Parent.leafs)):
+                if Parent.leafs[index].value is None:
+                    Parent._leaf_join(Subtree, index)
                     return 'True'
             return "False"
 
@@ -138,24 +139,73 @@ class Tree:
                     pass
             return False
 
+    def showTree(self, mode = 'hide'):
+        """
+        show the tree. 
+        mode = 'hide' is showing all of node which value is not None.
+        default: mode = 'hide'
+        """
+        if self.value is None:
+            return
+        else:
+            Stack = list()
+            level = 0
+            Stack.append(('', self, level))
 
+            while len(Stack) != 0:
+                symbol, cur_tree, level = Stack.pop()
+
+                if level == 0:
+                    print(cur_tree.value)
+                    print('│')
+                else:
+                    print(symbol + str(cur_tree.value))
+
+                if symbol == '':
+                    base_str = symbol
+                elif "└────" in symbol:
+                    base_str = symbol[:-len("└────")] + '     '
+                else:
+                    base_str = symbol[:-len("├────")] + '|    '
+
+                level += 1
+                if mode == 'hide':
+                    leafs = [ f for f in cur_tree.leafs if f.value is not None]
+                    leafs.reverse()
+                    for leaf_index in range(len(leafs)):
+                        if leaf_index == 0:
+                            Stack.append((base_str + "└────", leafs[leaf_index], level))
+                        else:
+                            Stack.append((base_str + "├────", leafs[leaf_index], level))
+                else:
+                    pass
 
 
 if __name__ == '__main__':
     t = Tree(1, leaf_len = 3)
     for i in range(3):
-        t._leaf_join(Tree(i+2,leaf_len = 3),i)
-    t.leafs[1]._leaf_join(Tree(6,leaf_len = 3), 2)
-    t.leafs[0]._leaf_join(Tree(7,leaf_len = 3), 0)
-    t.leafs[1].leafs[2]._leaf_join(Tree(8,leaf_len = 3), 2)
-    print(t.size())
-    t.add_subtree(t.leafs[1].leafs[2], Tree(9))
-    print(t.size())
-    t.delete_leaf(t.leafs[1].leafs[2], 0)
-    print(t.size())
+        t._leaf_join(Tree(i+2, leaf_len = 3),i)
 
+    t.add_subtree(t.leafs[2], Tree(42))
+    t.add_subtree(t.leafs[2], Tree(43))
+    t.leafs[1]._leaf_join(Tree(6, leaf_len = 3), 2)
+    t.leafs[1]._leaf_join(Tree(11, leaf_len = 3), 0)
+    t.leafs[0]._leaf_join(Tree(7, leaf_len = 3), 0)
+    t.leafs[1].leafs[2]._leaf_join(Tree(8, leaf_len = 3), 2)
+    t.leafs[0].leafs[0]._leaf_join(Tree(10), 0)
+    # print(t.size())
+    t.add_subtree(t.leafs[1].leafs[2], Tree(9))
+    t.add_subtree(t.leafs[1].leafs[2], Tree(22))
+
+    t.add_subtree(t.leafs[1].leafs[2].leafs[0], Tree(91))
+    t.add_subtree(t.leafs[1].leafs[2].leafs[0], Tree(92))
+    # print(t.size())
+    # t.delete_leaf(t.leafs[1].leafs[2], 0)
+    # print(t.size())
+
+    t.showTree()
     # t.leafs[1].leafs[2].leafs[2].leafs[0].value == 9
-    print(t.occur_in_tree(9))
+    # print(t.occur_in_tree(9))
     # print(t.height())
     # print(t.size())
     # import doctest
