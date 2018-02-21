@@ -7,7 +7,7 @@
 
 from queue import Queue
 
-class Tree:
+class Tree():
     def __init__(self, value = None, leaf_len = 2):
         self.value = value
         self.domain = {}
