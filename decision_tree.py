@@ -17,6 +17,7 @@ class TRData():
         self.dic = self.dicgen()
 
     def getdata(self, Datafile):
+        """acquire data from training file."""
         try:
             with open(Datafile, 'r+') as f:
                 attribute = f.readline()
@@ -31,6 +32,9 @@ class TRData():
             return attribute.strip().split(), target.strip(), [d.strip().split() for d in trdata]
 
     def dicgen(self):
+        """
+        generate a dictionary of Domain of Attributes
+        """
         AttrDic = {}
         for idx in range(len(self.attribute)):
             tmp = list(set(self.col[idx]))
@@ -47,13 +51,14 @@ class DTree(Tree):
     def __init__(self, value = None, leaf_len = 2):
         super(DTree, self).__init__(value, leaf_len)
 
-    def find_in_tree(self):
+    def find_in_tree(self, app_data):
         pass
 
 
 class ID3(object):
     def __init__(self, file_name):
         self.tdata = TRData(file_name)
+        self.DeTree = None
 
     def Entropy(self, bool_example, total = None):
         """
@@ -79,6 +84,7 @@ class ID3(object):
         value list is like:
             if S <- [9+, 5-], Sweak <- [6+, 2-], Sstrong <- [3+, 3-]
             then [[6, 2], [3, 3], [9, 5]].
+        return the Gain value(float).
         """
         if value_list == None:
             return
@@ -97,6 +103,7 @@ class ID3(object):
         S_train means that the whole subset of training set that is changed by upper-layer attribute.
         atrDic is attribute dictionary,
         cond_atr means that the attribute value need to be classified.
+        return a result like [9, 5].
         """
         bool_expl = list()
         for v in atrDic[target]:
@@ -109,6 +116,10 @@ class ID3(object):
         return bool_expl
 
     def info_gain(self, S_train, cond_atr):
+        """
+        the implementation of Gain(S, Wind).
+        return the Gain value calculated by Attribute name (float).
+        """
         atrDic = self.tdata.dic
         target = self.tdata.target
         S = self.Set_Stastistic(S_train, atrDic, target)
@@ -121,6 +132,7 @@ class ID3(object):
         return self.Gain(gain_list)
 
     def select_attr(self, S_train, attr_list):
+        """ select a Attribute which Gain value is the most."""
         # gain_list = [self.info_gain(S_train, attr) for attr in attr_list]
         gain_list = list()
 
@@ -134,6 +146,7 @@ class ID3(object):
         return attr_list[max_idx]
 
     def _subtree_gen(self, root, attrdic, attr, same = False):
+        """the kernel of generating a subtree."""
         addr_list = list()
         root.value = attr
         if same == True:
@@ -152,6 +165,7 @@ class ID3(object):
         return addr_list
 
     def _S_list_gen(self, S, attr, attrdic):
+        """the kernel of make a list of Sv that attributes satisfied S"""
         S_list = list()
         for Value in attrdic[attr]:
             S_list.append([ t for t in S if Value in t])
@@ -162,6 +176,10 @@ class ID3(object):
         return S_list
 
     def S_all_same(self, S):
+        """
+        check if the the target attribute value of S is all the same.
+        return T/F, the target attribute value.
+        """
         S_stat = self.Set_Stastistic(S, self.tdata.dic, self.tdata.target)
         S_tmp = [ i for i in S_stat if i != 0]
         if S is None or len(S) == 0:
@@ -171,6 +189,10 @@ class ID3(object):
         return False, 'err'
 
     def _ID3_Dtree(self, S_train, target_attr, Attr, AttrDic):
+        """
+        using the BFS Traversal method, build a ID3-Decision Tree.
+        return a root address.
+        """
         attr_set = set(Attr)
         attr_name = self.select_attr(S_train, list(attr_set))
         # root = self.subtree_gen(AttrDic, Attr)
@@ -205,9 +227,38 @@ class ID3(object):
     def ID3_Tree(self):
         res = self._ID3_Dtree(self.tdata.trdata, self.tdata.target, self.tdata.attribute, self.tdata.dic)
         res.showTree()
+        self.DeTree = res
+        return res
 
+    def _classify_ByTree(self, tree, attr_list, app_data):
+        """
+        the input data must be a list like ["Rain", "Mild", "High", "Strong"].
+        return the class name
+        """
+        Stack = list()
+        Stack.append(tree)
+        classR = -1
 
+        while len(Stack) != 0:
+            Attr = Stack.pop()
+            if Attr.value in attr_list:
+                idx = attr_list.index(Attr.value)
+                selected_tree = [ sub for sub in Attr.leafs if sub.value == app_data[idx]]
+                selected_tree = selected_tree.pop()
+                Stack.append(selected_tree.leafs[0])
+                # print(Attr.value) # just for debugging.
+            elif Attr.value == None:
+                pass
+            elif all([leaf.value == None for leaf in Attr.leafs]) is True :
+                classR = Attr.value
+            else:
+                break
 
+        return classR
+
+    def classify_ByTree(self, app_data):
+        classN = self._classify_ByTree(self.DeTree, self.tdata.attribute, app_data)
+        return classN
 
 
 def main():
@@ -222,8 +273,9 @@ def main():
     # print(t.Set_Stastistic(t.tdata.trdata, t.tdata.dic, t.tdata.target, 'Strong'))
     # print(t.info_gain(t.tdata.trdata, 'Temperature'))
     # print(t.select_attr(t.tdata.trdata, ['Outlook', 'Temperature', 'Humidity', 'Wind']))
-    t.ID3_Tree()
+    a = t.ID3_Tree()
     # S = [['Rain', 'Mild', 'High', 'Weak', 'Yes'], ['Rain', 'Cool', 'Normal', 'Weak', 'Yes'], ['Rain', 'Cool', 'Normal', 'Strong', 'No'], ['Rain', 'Mild', 'Normal', 'Weak', 'Yes'], ['Rain', 'Mild', 'High', 'Strong', 'No']]
     # print(t.info_gain(S,'Wind'))
+    print(t.classify_ByTree(["Rain", "Mild", "High", "Strong"]))
 if __name__ == '__main__':
     main()

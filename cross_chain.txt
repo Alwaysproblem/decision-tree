@@ -1,0 +1,5 @@
+Outlook Temperature Humidity Wind
+
+Overcast Hot High Weak (Yes)
+Sunny Cool Normal Weak (Yes)
+Rain Mild High Strong (No)
