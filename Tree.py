@@ -35,7 +35,7 @@ class Tree():
         else:
             self.leafs[index] = Tree(NewTree)
 
-    def add_subtree(self, Parent, Subtree):
+    def add_subtree(self, Parent = None, Subtree = None):
         """add the subtree into the empty space of Parent leaf list."""
         if Parent is None or Subtree is None:
             return 'error'
@@ -157,7 +157,8 @@ class Tree():
 
                 if level == 0:
                     print(cur_tree.value)
-                    print('│')
+                    if self.height() != 0:
+                        print('│')
                 else:
                     print(symbol + str(cur_tree.value))
 
@@ -166,7 +167,7 @@ class Tree():
                 elif "└────" in symbol:
                     base_str = symbol[:-len("└────")] + '     '
                 else:
-                    base_str = symbol[:-len("├────")] + '|    '
+                    base_str = symbol[:-len("├────")] + '│    '
 
                 level += 1
                 if mode == 'hide':
@@ -182,7 +183,9 @@ class Tree():
 
 
 if __name__ == '__main__':
-    t = Tree(1, leaf_len = 3)
+    t = Tree(1, leaf_len = 4)
+    t.showTree()
+    print()
     for i in range(3):
         t._leaf_join(Tree(i+2, leaf_len = 3),i)
 
@@ -202,7 +205,7 @@ if __name__ == '__main__':
     # print(t.size())
     # t.delete_leaf(t.leafs[1].leafs[2], 0)
     # print(t.size())
-
+    t.add_subtree(t, Tree('ee'))
     t.showTree()
     # t.leafs[1].leafs[2].leafs[2].leafs[0].value == 9
     # print(t.occur_in_tree(9))
